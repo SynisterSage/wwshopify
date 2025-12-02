@@ -14,6 +14,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
+import {Preloader} from './components/Preloader';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -178,6 +179,7 @@ export default function App() {
       shop={data.shop}
       consent={data.consent}
     >
+      <Preloader />
       <PageLayout {...data}>
         <Outlet />
       </PageLayout>
