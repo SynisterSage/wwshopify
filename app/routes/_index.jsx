@@ -1,15 +1,13 @@
-import {Await, useLoaderData} from 'react-router';
+import {Await, useLoaderData, Link} from 'react-router';
 import {Suspense} from 'react';
-import {Hero} from '~/components/Hero';
-import {CategoryCards} from '~/components/CategoryCards';
-import {FeaturedProducts} from '~/components/FeaturedProducts';
-import {Newsletter} from '~/components/Newsletter';
+import {Image} from '@shopify/hydrogen';
+import {ProductItem} from '~/components/ProductItem';
 
 /**
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: 'Wicked Works | Designed with Intention'}];
+  return [{title: 'Hydrogen | Home'}];
 };
 
 /**
@@ -32,12 +30,12 @@ export async function loader(args) {
  */
 async function loadCriticalData({context}) {
   const [{collections}] = await Promise.all([
-    context.storefront.query(ALL_COLLECTIONS_QUERY),
+    context.storefront.query(FEATURED_COLLECTION_QUERY),
     // Add other queries here, so that they are loaded in parallel
   ]);
 
   return {
-    collections: collections.nodes,
+    featuredCollection: collections.nodes[0],
   };
 }
 
@@ -66,26 +64,66 @@ export default function Homepage() {
   const data = useLoaderData();
   return (
     <div className="home">
-      <Hero />
-      <CategoryCards collections={data.collections} />
-      <Suspense fallback={<div className="py-20 text-center text-white/50">Loading products...</div>}>
-        <Await resolve={data.recommendedProducts}>
-          {(response) => (
-            <FeaturedProducts products={response?.products?.nodes || []} />
-          )}
-        </Await>
-      </Suspense>
-      <Newsletter />
+      <FeaturedCollection collection={data.featuredCollection} />
+      <RecommendedProducts products={data.recommendedProducts} />
     </div>
   );
 }
 
-const ALL_COLLECTIONS_QUERY = `#graphql
-  fragment CollectionCard on Collection {
+/**
+ * @param {{
+ *   collection: FeaturedCollectionFragment;
+ * }}
+ */
+function FeaturedCollection({collection}) {
+  if (!collection) return null;
+  const image = collection?.image;
+  return (
+    <Link
+      className="featured-collection"
+      to={`/collections/${collection.handle}`}
+    >
+      {image && (
+        <div className="featured-collection-image">
+          <Image data={image} sizes="100vw" />
+        </div>
+      )}
+      <h1>{collection.title}</h1>
+    </Link>
+  );
+}
+
+/**
+ * @param {{
+ *   products: Promise<RecommendedProductsQuery | null>;
+ * }}
+ */
+function RecommendedProducts({products}) {
+  return (
+    <div className="recommended-products">
+      <h2>Recommended Products</h2>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={products}>
+          {(response) => (
+            <div className="recommended-products-grid">
+              {response
+                ? response.products.nodes.map((product) => (
+                    <ProductItem key={product.id} product={product} />
+                  ))
+                : null}
+            </div>
+          )}
+        </Await>
+      </Suspense>
+      <br />
+    </div>
+  );
+}
+
+const FEATURED_COLLECTION_QUERY = `#graphql
+  fragment FeaturedCollection on Collection {
     id
     title
-    handle
-    description
     image {
       id
       url
@@ -93,17 +131,13 @@ const ALL_COLLECTIONS_QUERY = `#graphql
       width
       height
     }
-    products(first: 1) {
-      nodes {
-        id
-      }
-    }
+    handle
   }
-  query AllCollections($country: CountryCode, $language: LanguageCode)
+  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    collections(first: 10, sortKey: TITLE, query: "NOT title:*example* AND NOT title:*Home*") {
+    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
       nodes {
-        ...CollectionCard
+        ...FeaturedCollection
       }
     }
   }
@@ -114,7 +148,6 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     id
     title
     handle
-    availableForSale
     priceRange {
       minVariantPrice {
         amount
@@ -140,5 +173,6 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 `;
 
 /** @typedef {import('./+types/_index').Route} Route */
+/** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
 /** @typedef {import('storefrontapi.generated').RecommendedProductsQuery} RecommendedProductsQuery */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */

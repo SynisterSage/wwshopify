@@ -1,4 +1,6 @@
-# Wicked Works Design System
+# Wicked Works Design System (Legacy)
+
+This document describes the previous “dark + glass + red accent” direction. If you’re restarting the design, treat this as an archive/reference, not the current source of truth.
 
 ## Color Palette
 

@@ -1,69 +1,50 @@
 # Wicked Works Custom Storefront - Development Roadmap
 
-**Project**: Custom React + TypeScript storefront for Wicked Works Shopify store
+**Project**: Shopify Hydrogen custom storefront for Wicked Works
 **Store Domain**: https://wicked-works-3.myshopify.com/
-**Hosting**: Vercel
-**Client**: Your friend (non-technical)
+**Runtime/Hosting**: Shopify Oxygen (worker runtime)
 
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────┐
-│   React App         │
-│   (TypeScript)      │
-│   - Vercel Hosting  │
-└──────────┬──────────┘
-           │
-           │ Storefront API
-           │ (GraphQL)
-           │
-┌──────────▼──────────┐
-│  Shopify Backend    │
-│ (Wicked Works Store)│
-└─────────────────────┘
-           │
-           │
-┌──────────▼──────────┐
-│ Shopify Admin       │
-│ (Analytics, Orders) │
-└─────────────────────┘
+┌───────────────────────────┐
+│ Hydrogen (React Router 7) │
+│ + Vite                    │
+│ + Oxygen runtime          │
+└──────────────┬────────────┘
+               │ Storefront API (GraphQL)
+┌──────────────▼────────────┐
+│ Shopify Store (backend)   │
+└───────────────────────────┘
 ```
 
 ### Key Decisions Made
 
 | Decision | Choice | Reasoning |
 |----------|--------|-----------|
-| **Frontend Framework** | React + TypeScript | Type safety, performance, modern dev experience |
-| **Authentication** | Public Storefront API Token | Designed for client-side, safe to expose |
-| **Checkout** | Shopify Hosted Checkout | Simpler than custom checkout, secure payments |
+| **Framework** | Hydrogen + React Router 7 | Official headless stack for Shopify |
+| **Auth** | Customer Account API (`/account`) | Supported customer login/account pages |
+| **Checkout** | Shopify hosted checkout | Secure payments, no custom checkout |
 | **Analytics** | Shopify Admin (separate) | Friend already loves it, no duplication needed |
 | **Notifications** | Shopify Default (stock) | Standard transactional emails from Shopify |
 | **Product Sync** | Auto-sync via API | Real-time data from Shopify backend |
-| **Customer Accounts** | Skipped for MVP | Can add in Phase 3 if needed |
-| **Domain** | TBD (to be registered) | Will provide hosting URL initially for testing |
+| **Customer Accounts** | Enabled | `/account` routes are present |
+| **Domain** | TBD | Can run on Oxygen and later add custom domain |
 
 ---
 
 ## Phase 1: Foundation Setup (Weeks 1-2)
-**Goal**: Build basic storefront with product browsing and cart functionality
+**Goal**: Keep Shopify wiring stable while restarting the UI/design system
 
 ### 1.1 Environment & Project Setup
-- [ ] Clone/initialize React + TypeScript project (Vite or Next.js)
-- [ ] Create `.env.example` file with placeholder tokens
-- [ ] Create `.env.local` with actual tokens (not committed to git)
-- [ ] Install required dependencies:
-  - `@shopify/hydrogen-react` or `@apollo/client` for GraphQL
-  - `zustand` or `redux` for cart state management
-  - `react-router-dom` for routing
-- [ ] Set up ESLint + Prettier for code standards
+- [x] Hydrogen project scaffolded
+- [x] `.env.example` added
+- [ ] Confirm `.env` values locally (not committed)
 
 ### 1.2 Shopify Integration
-- [ ] Extract Public Storefront API token from Headless channel
-- [ ] Extract Store domain: `wicked-works-3.myshopify.com`
-- [ ] Create GraphQL client configuration
-- [ ] Test API connectivity with simple product query
+- [x] Storefront API connectivity working (GraphQL queries returning data)
 
 ### 1.3 Core Pages & Components
 Create the following pages:
@@ -99,8 +80,9 @@ Create reusable components:
 
 **Environment Variables Needed**:
 ```env
-VITE_SHOPIFY_STOREFRONT_TOKEN=your_public_token_here
-VITE_SHOPIFY_STORE_DOMAIN=wicked-works-3.myshopify.com
+PUBLIC_STOREFRONT_API_TOKEN=your_public_token_here
+PUBLIC_STORE_DOMAIN=wicked-works-3.myshopify.com
+SESSION_SECRET=your_session_secret_here
 ```
 
 ---
